@@ -19,18 +19,14 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
     CommandHandler() {
     }
 
-    ;
-
     CommandHandler(WECommandBlock plugin) {
         this.plugin = plugin;
         this.we = plugin.we;
     }
 
-    ;
-
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length < 1 ) return false;
+        if (args.length < 1) return false;
         if (!(sender instanceof BlockCommandSender || sender instanceof Player)) return false;
         Actor actor = BukkitAdapter.adapt(sender);
         World w = getWorldFromCommandSender(sender);

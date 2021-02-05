@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class WECommandBlock extends JavaPlugin {
     public final String saveDir = "wecommandblock";
     public WorldEditPlugin we;
+
     @Override
     public void onEnable() {
         this.we = ((WorldEditPlugin) getServer().getPluginManager().getPlugin("WorldEdit"));

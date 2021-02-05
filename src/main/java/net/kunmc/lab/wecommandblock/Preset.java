@@ -1,7 +1,5 @@
 package net.kunmc.lab.wecommandblock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.WorldEdit;
@@ -14,13 +12,15 @@ import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.clipboard.io.*;
 import com.sk89q.worldedit.function.operation.ForwardExtentCopy;
 import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.regions.selector.RegionSelectorType;
+import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.util.formatting.component.ErrorFormat;
+import com.sk89q.worldedit.util.io.file.FilenameException;
 import com.sk89q.worldedit.world.World;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.nio.file.Path;
 
 public class Preset {
@@ -39,51 +39,38 @@ public class Preset {
             actor.print(ErrorFormat.wrap("should call this command from player"));
         }
         LocalSession session = we.getWorldEdit().getSessionManager().get(actor);
-        ((Locatable) actor).getLocation();
-        session.getRegionSelector(w).getRegion();
-        session.getRegionSelector(w).getTypeName();
-        session.getRegionSelector(w).getPrimaryPosition();
-
+        BlockArrayClipboard clipboard;
         try {
-            Region r = session.getRegionSelector(w).getRegion();
-            BlockArrayClipboard clipboard = new BlockArrayClipboard(r);
-            EditSession editSession = WorldEdit.getInstance().newEditSessionBuilder().world(w).build();
+            Region region = session.getRegionSelector(w).getRegion();
+            clipboard = new BlockArrayClipboard(region);
+            clipboard.setOrigin(((Locatable) actor).getLocation().toVector().toBlockPoint());
+            EditSession editSession = WorldEdit.getInstance().newEditSessionBuilder().world(w).actor(actor).build();
             ForwardExtentCopy forwardExtentCopy = new ForwardExtentCopy(
-                    editSession, r, clipboard, r.getMinimumPoint()
+                    editSession, region, clipboard, region.getMinimumPoint()
             );
             Operations.complete(forwardExtentCopy);
-
-            Path dir = we.getWorldEdit().getWorkingDirectoryPath(plugin.saveDir);
-            File f = we.getWorldEdit().getSafeSaveFile(actor, dir.toFile(), filename, "schem");
-            ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-            String json = ow.writeValue(f)
-            ClipboardWriter writer = BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(f);
-            writer.write(clipboard);
-            // schem.save(actor, session, filename, "sponge", true);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-        /*Region r;
-        try {
-            r = session.getRegionSelector(w).getRegion();
-        } catch (IncompleteRegionException e) {
-            plugin.getServer().broadcastMessage(e.toString());
             return;
         }
-        plugin.getServer().broadcastMessage(r.toString());
-        r.forEach(x -> {
-            plugin.getServer().broadcastMessage(x.toString());
-        });
 
+        Path dir = we.getWorldEdit().getWorkingDirectoryPath(plugin.saveDir);
+        FileOutputStream f;
+        String regionSelectorType = session.getRegionSelector(w).getTypeName();
         try {
-            Path dir = we.getWorldEdit().getWorkingDirectoryPath(plugin.saveDir);
-            FileOutputStream f = new FileOutputStream(we.getWorldEdit().getSafeSaveFile(actor, dir.toFile(), filename,"region"));
-            ObjectOutputStream o = new ObjectOutputStream(f);
-            o.writeObject(r);
-            o.close();
-        } catch (IOException | FilenameException e) {
-            plugin.getServer().broadcastMessage(e.toString());
-        }*/
+            f = new FileOutputStream(we.getWorldEdit().getSafeSaveFile(actor, dir.toFile(), filename + "-" + regionSelectorType, "schem"));
+        } catch (FilenameException | FileNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        try (ClipboardWriter writer = BuiltInClipboardFormat.SPONGE_SCHEMATIC.getWriter(f)) {
+            writer.write(clipboard);
+            f.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public Clipboard load(Actor actor, LocalSession session, String filename) {
@@ -99,5 +86,19 @@ public class Preset {
             return null;
         }
         return clipboard;
+    }
+
+    class Pre {
+        Location location;
+        Region region;
+        String selectorTypeName;
+        BlockVector3 primaryPos;
+
+        Pre(Location location, Region region, String selectorTypeName, BlockVector3 primaryPos) {
+            this.location = location;
+            this.region = region;
+            this.selectorTypeName = selectorTypeName;
+            this.primaryPos = primaryPos;
+        }
     }
 }

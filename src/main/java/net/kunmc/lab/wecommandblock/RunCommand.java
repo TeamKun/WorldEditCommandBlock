@@ -8,12 +8,19 @@ import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.extension.platform.permission.ActorSelectorLimits;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldedit.regions.selector.CylinderRegionSelector;
+import com.sk89q.worldedit.regions.RegionSelector;
+import com.sk89q.worldedit.regions.selector.*;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.util.Location;
+import com.sk89q.worldedit.util.formatting.component.CommandListBox;
+import com.sk89q.worldedit.util.formatting.component.SubtleFormat;
+import com.sk89q.worldedit.util.formatting.component.TextComponentProducer;
+import com.sk89q.worldedit.util.formatting.text.TextComponent;
+import com.sk89q.worldedit.util.formatting.text.TranslatableComponent;
 import com.sk89q.worldedit.world.World;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 public class RunCommand {
     WECommandBlock plugin;
@@ -26,16 +33,20 @@ public class RunCommand {
 
     public void run(Actor actor, World w, String presetname, String[] wecommand) {
         Region r;
-        LocalSession session = we.getWorldEdit().getSessionManager().get(actor);
+         LocalSession session = we.getWorldEdit().getSessionManager().get(actor);
         Clipboard clipboard = new Preset(plugin).load(actor, session, presetname);
         session.setClipboard(new ClipboardHolder(clipboard));
         /*LocalSession session = we.getWorldEdit().getSessionManager().get(actor);*/
         FakePlayer fake = new FakePlayer(w, actor.getSessionKey(), new Location(w, clipboard.getOrigin().toVector3()));
 
+        RegionSelector newSelector = selectRegionSelectorType(session.getRegionSelector(w),presetname.replaceAll(".*-",""));
+      //  session.setRegionSelector(w, new CylinderRegionSelector(session.getRegionSelector(w)));
+        session.setRegionSelector(w, newSelector);
+
         session.getRegionSelector(w).selectPrimary(clipboard.getMinimumPoint(), ActorSelectorLimits.forActor(actor));
         session.getRegionSelector(w).selectSecondary(clipboard.getMaximumPoint(), ActorSelectorLimits.forActor(actor));
         session.setWorldOverride(w);
-        session.setRegionSelector(w, new CylinderRegionSelector(session.getRegionSelector(w)));
+
         session.setPlaceAtPos1(false);
         session.dispatchCUISelection(actor);
 
@@ -57,4 +68,39 @@ public class RunCommand {
         }
         return Joiner.on(" ").appendTo(sb, args).toString();
     }
+
+    private  RegionSelector selectRegionSelectorType(RegionSelector oldSelector, String type) {
+        final RegionSelector newSelector;
+        switch (type) {
+            case "cuboid":
+                newSelector = new CuboidRegionSelector(oldSelector);
+                break;
+            case "extend":
+                newSelector = new ExtendingCuboidRegionSelector(oldSelector);
+                break;
+            case "poly": {
+                newSelector = new Polygonal2DRegionSelector(oldSelector);
+                break;
+            }
+            case "ellipsoid":
+                newSelector = new EllipsoidRegionSelector(oldSelector);
+                break;
+            case "sphere":
+                newSelector = new SphereRegionSelector(oldSelector);
+                break;
+            case "cyl":
+                newSelector = new CylinderRegionSelector(oldSelector);
+                break;
+            case "convex":
+            case "hull":
+            case "polyhedron": {
+                newSelector = new ConvexPolyhedralRegionSelector(oldSelector);
+                break;
+            }
+            default:
+                newSelector = new CuboidRegionSelector(oldSelector);
+        }
+        return newSelector;
+    }
+
 }
