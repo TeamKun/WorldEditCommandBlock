@@ -14,13 +14,13 @@ import javax.annotation.Nullable;
 import java.util.Locale;
 import java.util.UUID;
 
-public class FakePlayer extends AbstractPlayerActor {
+public class FakeActor extends AbstractPlayerActor {
     World world;
     SessionKey sessionKey;
     Location location;
     String name = "Fake";
 
-    FakePlayer(World world, SessionKey sessionKey, Location location) {
+    FakeActor(World world, SessionKey sessionKey, Location location) {
         this.world = world;
         this.sessionKey = sessionKey;
         this.location = location;

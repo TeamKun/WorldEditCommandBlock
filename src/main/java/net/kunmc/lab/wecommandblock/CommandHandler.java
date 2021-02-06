@@ -5,6 +5,7 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.world.World;
+import net.kunmc.lab.wecommandblock.Preset.Preset;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 

@@ -6,21 +6,18 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.event.platform.CommandEvent;
 import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.extension.platform.permission.ActorSelectorLimits;
-import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.regions.selector.*;
-import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.util.Location;
-import com.sk89q.worldedit.util.formatting.component.CommandListBox;
-import com.sk89q.worldedit.util.formatting.component.SubtleFormat;
-import com.sk89q.worldedit.util.formatting.component.TextComponentProducer;
-import com.sk89q.worldedit.util.formatting.text.TextComponent;
-import com.sk89q.worldedit.util.formatting.text.TranslatableComponent;
 import com.sk89q.worldedit.world.World;
+import net.kunmc.lab.wecommandblock.Preset.Preset;
+import net.kunmc.lab.wecommandblock.Preset.PresetData;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Optional;
+import java.util.List;
 
 public class RunCommand {
     WECommandBlock plugin;
@@ -31,28 +28,34 @@ public class RunCommand {
         this.we = ((WorldEditPlugin) this.plugin.getServer().getPluginManager().getPlugin("WorldEdit"));
     }
 
-    public void run(Actor actor, World w, String presetname, String[] wecommand) {
-        Region r;
-         LocalSession session = we.getWorldEdit().getSessionManager().get(actor);
-        Clipboard clipboard = new Preset(plugin).load(actor, session, presetname);
-        session.setClipboard(new ClipboardHolder(clipboard));
-        /*LocalSession session = we.getWorldEdit().getSessionManager().get(actor);*/
-        FakePlayer fake = new FakePlayer(w, actor.getSessionKey(), new Location(w, clipboard.getOrigin().toVector3()));
+    public void run(Actor actor, World w, String filename, String[] wecommand) {
+        LocalSession session = we.getWorldEdit().getSessionManager().get(actor);
+        PresetData data = new Preset(plugin).load(actor, filename);
+        String type = data.type;
+        Location origin = new Location(w,data.origin[0], data.origin[1], data.origin[2]);
+        BlockVector3 pos1 = BlockVector3.at(data.pos1[0], data.pos1[1], data.pos1[2]);
+        List<BlockVector3> pos2 = new ArrayList<>();
+        data.pos2.forEach(x -> {
+            pos2.add(BlockVector3.at(x[0],x[1],x[2]));
+        });
 
-        RegionSelector newSelector = selectRegionSelectorType(session.getRegionSelector(w),presetname.replaceAll(".*-",""));
-      //  session.setRegionSelector(w, new CylinderRegionSelector(session.getRegionSelector(w)));
+        FakeActor fakeActor = new FakeActor(w, actor.getSessionKey(), origin);
+
+        RegionSelector newSelector = selectRegionSelectorType(session.getRegionSelector(w),type);
+
         session.setRegionSelector(w, newSelector);
 
-        session.getRegionSelector(w).selectPrimary(clipboard.getMinimumPoint(), ActorSelectorLimits.forActor(actor));
-        session.getRegionSelector(w).selectSecondary(clipboard.getMaximumPoint(), ActorSelectorLimits.forActor(actor));
+        session.getRegionSelector(w).selectPrimary(pos1, ActorSelectorLimits.forActor(actor));
+        pos2.forEach(x -> {
+            session.getRegionSelector(w).selectSecondary(x,ActorSelectorLimits.forActor(actor));
+        });
         session.setWorldOverride(w);
-
         session.setPlaceAtPos1(false);
         session.dispatchCUISelection(actor);
 
         String arguments = rebuildArguments(wecommand[0], Arrays.copyOfRange(wecommand, 1, wecommand.length));
         plugin.getServer().broadcastMessage(arguments);
-        we.getWorldEdit().getEventBus().post(new CommandEvent(fake, arguments));
+        we.getWorldEdit().getEventBus().post(new CommandEvent(fakeActor, arguments));
 
     }
 
@@ -70,15 +73,12 @@ public class RunCommand {
     }
 
     private  RegionSelector selectRegionSelectorType(RegionSelector oldSelector, String type) {
-        final RegionSelector newSelector;
+        RegionSelector newSelector;
         switch (type) {
             case "cuboid":
                 newSelector = new CuboidRegionSelector(oldSelector);
                 break;
-            case "extend":
-                newSelector = new ExtendingCuboidRegionSelector(oldSelector);
-                break;
-            case "poly": {
+            case "2Dx1D polygon": {
                 newSelector = new Polygonal2DRegionSelector(oldSelector);
                 break;
             }
@@ -88,15 +88,12 @@ public class RunCommand {
             case "sphere":
                 newSelector = new SphereRegionSelector(oldSelector);
                 break;
-            case "cyl":
+            case "Cylinder":
                 newSelector = new CylinderRegionSelector(oldSelector);
                 break;
-            case "convex":
-            case "hull":
-            case "polyhedron": {
+            case "Convex Polyhedron":
                 newSelector = new ConvexPolyhedralRegionSelector(oldSelector);
                 break;
-            }
             default:
                 newSelector = new CuboidRegionSelector(oldSelector);
         }
