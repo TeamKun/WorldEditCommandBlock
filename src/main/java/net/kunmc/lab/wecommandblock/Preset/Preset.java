@@ -27,7 +27,7 @@ public class Preset {
         this.we = plugin.we;
     }
 
-    public void save(Actor actor, World w, String filename) {
+    public void save(Actor actor, World w, boolean overwrite, String filename) {
         if (!actor.isPlayer()) {
             actor.print(ErrorFormat.wrap("should call this command from player"));
         }
@@ -49,7 +49,7 @@ public class Preset {
         ObjectOutputStream stream;
         try {
             File f = we.getWorldEdit().getSafeSaveFile(actor, dir.toFile(), filename, Ext);
-            if (f.exists()) {
+            if (f.exists() && !overwrite) {
                 actor.print(ErrorFormat.wrap(filename+" is already exists"));
                 return;
             };

@@ -28,11 +28,12 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length < 1) return false;
+
+        Actor actor = BukkitAdapter.adapt(sender);
         if (!(sender instanceof Player || sender instanceof BlockCommandSender)) {
-            sender.sendMessage("This command is only for Players and CommandBlocks");
+            actor.printError("This command is only for Players and CommandBlocks");
             return true;
         }
-        Actor actor = BukkitAdapter.adapt(sender);
         World w = getWorldFromCommandSender(sender);
 
         String subcmd = args[0].toLowerCase();
@@ -46,10 +47,11 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             case "save":
                 if (args.length < 2) return false;
                 if (!(actor.isPlayer())){
-                    sender.sendMessage("This command is only for Players");
+                    actor.printError("This command is only for Players");
                     return true;
                 }
-                new Preset(this.plugin).save(actor, w, args[1]);
+                boolean overwrite = args[args.length-1].equalsIgnoreCase("-f");
+                new Preset(this.plugin).save(actor, w, overwrite, args[1]);
                 return true;
         }
         return false;

@@ -7,7 +7,7 @@ commands:
     description:
     usage: |
       /<command> run <filename> <WorldEditCommand>
-      /<command> save <filename>
+      /<command> save <filename> [-f]
     permission: op
 depend:
   - WorldEdit
