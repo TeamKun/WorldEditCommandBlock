@@ -7,7 +7,6 @@ import com.sk89q.worldedit.event.platform.CommandEvent;
 import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.extension.platform.permission.ActorSelectorLimits;
 import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.regions.selector.*;
 import com.sk89q.worldedit.util.Location;
@@ -31,19 +30,19 @@ public class WEDispatcher {
     public void run(Actor actor, World w, String filename, String[] wecommand) {
         PresetData data = new Preset(plugin).load(actor, filename);
         String type = data.type;
-        Location origin = new Location(w,data.origin[0], data.origin[1], data.origin[2]);
+        Location origin = new Location(w, data.origin[0], data.origin[1], data.origin[2]);
         BlockVector3 pos1 = BlockVector3.at(data.pos1[0], data.pos1[1], data.pos1[2]);
         List<BlockVector3> pos2 = new ArrayList<>();
         data.pos2.forEach(x -> {
-            pos2.add(BlockVector3.at(x[0],x[1],x[2]));
+            pos2.add(BlockVector3.at(x[0], x[1], x[2]));
         });
 
         LocalSession session = we.getWorldEdit().getSessionManager().get(actor);
-        RegionSelector newSelector = selectRegionSelectorType(session.getRegionSelector(w),type);
+        RegionSelector newSelector = selectRegionSelectorType(session.getRegionSelector(w), type);
         session.setRegionSelector(w, newSelector);
         session.getRegionSelector(w).selectPrimary(pos1, ActorSelectorLimits.forActor(actor));
         pos2.forEach(x -> {
-            session.getRegionSelector(w).selectSecondary(x,ActorSelectorLimits.forActor(actor));
+            session.getRegionSelector(w).selectSecondary(x, ActorSelectorLimits.forActor(actor));
         });
         session.setWorldOverride(w);
         session.setPlaceAtPos1(false);

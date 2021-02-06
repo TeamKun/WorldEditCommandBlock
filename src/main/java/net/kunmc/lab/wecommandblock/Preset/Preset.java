@@ -9,7 +9,6 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.util.formatting.component.ErrorFormat;
-import com.sk89q.worldedit.util.formatting.text.Component;
 import com.sk89q.worldedit.util.io.file.FilenameException;
 import com.sk89q.worldedit.world.World;
 import net.kunmc.lab.wecommandblock.WECommandBlock;
@@ -18,9 +17,9 @@ import java.io.*;
 import java.nio.file.Path;
 
 public class Preset {
+    public static String Ext = "preset";
     WECommandBlock plugin;
     WorldEditPlugin we;
-    public static String Ext = "preset";
 
     public Preset(WECommandBlock plugin) {
         this.plugin = plugin;
@@ -50,9 +49,9 @@ public class Preset {
         try {
             File f = we.getWorldEdit().getSafeSaveFile(actor, dir.toFile(), filename, Ext);
             if (f.exists() && !overwrite) {
-                actor.print(ErrorFormat.wrap(filename+" is already exists"));
+                actor.print(ErrorFormat.wrap(filename + " is already exists"));
                 return;
-            };
+            }
             stream = new ObjectOutputStream(new FileOutputStream(f));
 
         } catch (FilenameException | IOException e) {
@@ -82,7 +81,7 @@ public class Preset {
         try {
             File f = we.getWorldEdit().getSafeSaveFile(actor, dir.toFile(), filename, Ext);
             if (!f.exists()) {
-                actor.print(ErrorFormat.wrap(filename+" is not exists"));
+                actor.print(ErrorFormat.wrap(filename + " is not exists"));
                 return null;
             }
             ObjectInputStream stream = new ObjectInputStream(new FileInputStream(f));

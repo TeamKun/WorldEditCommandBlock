@@ -17,9 +17,6 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
     WECommandBlock plugin;
     WorldEditPlugin we;
 
-    CommandHandler() {
-    }
-
     CommandHandler(WECommandBlock plugin) {
         this.plugin = plugin;
         this.we = plugin.we;
@@ -46,11 +43,11 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 return true;
             case "save":
                 if (args.length < 2) return false;
-                if (!(actor.isPlayer())){
+                if (!(actor.isPlayer())) {
                     actor.printError("This command is only for Players");
                     return true;
                 }
-                boolean overwrite = args[args.length-1].equalsIgnoreCase("-f");
+                boolean overwrite = args[args.length - 1].equalsIgnoreCase("-f");
                 new Preset(this.plugin).save(actor, w, overwrite, args[1]);
                 return true;
         }
@@ -69,7 +66,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 return list;
             case 2:
                 Arrays.asList(we.getWorldEdit().getWorkingDirectoryPath(plugin.saveDir).toFile().list()).stream().forEach(x -> {
-                    list.add(x.replaceFirst("."+Preset.Ext, ""));
+                    list.add(x.replaceFirst("." + Preset.Ext, ""));
                 });
                 return list;
             default:
