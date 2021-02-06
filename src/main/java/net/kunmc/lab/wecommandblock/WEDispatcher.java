@@ -25,7 +25,7 @@ public class WEDispatcher {
 
     WEDispatcher(WECommandBlock plugin) {
         this.plugin = plugin;
-        this.we = ((WorldEditPlugin) this.plugin.getServer().getPluginManager().getPlugin("WorldEdit"));
+        this.we = plugin.we;
     }
 
     public void run(Actor actor, World w, String filename, String[] wecommand) {
