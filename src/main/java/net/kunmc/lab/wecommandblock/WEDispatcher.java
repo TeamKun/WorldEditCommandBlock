@@ -19,17 +19,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class RunCommand {
+public class WEDispatcher {
     WECommandBlock plugin;
     WorldEditPlugin we;
 
-    RunCommand(WECommandBlock plugin) {
+    WEDispatcher(WECommandBlock plugin) {
         this.plugin = plugin;
         this.we = ((WorldEditPlugin) this.plugin.getServer().getPluginManager().getPlugin("WorldEdit"));
     }
 
     public void run(Actor actor, World w, String filename, String[] wecommand) {
-        LocalSession session = we.getWorldEdit().getSessionManager().get(actor);
         PresetData data = new Preset(plugin).load(actor, filename);
         String type = data.type;
         Location origin = new Location(w,data.origin[0], data.origin[1], data.origin[2]);
@@ -39,12 +38,9 @@ public class RunCommand {
             pos2.add(BlockVector3.at(x[0],x[1],x[2]));
         });
 
-        FakeActor fakeActor = new FakeActor(w, actor.getSessionKey(), origin);
-
+        LocalSession session = we.getWorldEdit().getSessionManager().get(actor);
         RegionSelector newSelector = selectRegionSelectorType(session.getRegionSelector(w),type);
-
         session.setRegionSelector(w, newSelector);
-
         session.getRegionSelector(w).selectPrimary(pos1, ActorSelectorLimits.forActor(actor));
         pos2.forEach(x -> {
             session.getRegionSelector(w).selectSecondary(x,ActorSelectorLimits.forActor(actor));
@@ -54,7 +50,7 @@ public class RunCommand {
         session.dispatchCUISelection(actor);
 
         String arguments = rebuildArguments(wecommand[0], Arrays.copyOfRange(wecommand, 1, wecommand.length));
-        plugin.getServer().broadcastMessage(arguments);
+        FakeActor fakeActor = new FakeActor(w, actor.getSessionKey(), origin);
         we.getWorldEdit().getEventBus().post(new CommandEvent(fakeActor, arguments));
 
     }
@@ -72,16 +68,15 @@ public class RunCommand {
         return Joiner.on(" ").appendTo(sb, args).toString();
     }
 
-    private  RegionSelector selectRegionSelectorType(RegionSelector oldSelector, String type) {
+    private RegionSelector selectRegionSelectorType(RegionSelector oldSelector, String type) {
         RegionSelector newSelector;
         switch (type) {
             case "cuboid":
                 newSelector = new CuboidRegionSelector(oldSelector);
                 break;
-            case "2Dx1D polygon": {
+            case "2Dx1D polygon":
                 newSelector = new Polygonal2DRegionSelector(oldSelector);
                 break;
-            }
             case "ellipsoid":
                 newSelector = new EllipsoidRegionSelector(oldSelector);
                 break;

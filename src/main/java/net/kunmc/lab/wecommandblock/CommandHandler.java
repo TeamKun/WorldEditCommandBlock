@@ -28,7 +28,10 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length < 1) return false;
-        if (!(sender instanceof BlockCommandSender || sender instanceof Player)) return false;
+        if (!(sender instanceof Player || sender instanceof BlockCommandSender)) {
+            sender.sendMessage("This command is only for Players and CommandBlocks");
+            return true;
+        }
         Actor actor = BukkitAdapter.adapt(sender);
         World w = getWorldFromCommandSender(sender);
 
@@ -36,10 +39,16 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         switch (subcmd) {
             case "run":
                 if (args.length < 3) return false;
-                new RunCommand(this.plugin).run(actor, w, args[1], Arrays.copyOfRange(args, 2, args.length));
+                String filename = args[1];
+                String[] wecommand = Arrays.copyOfRange(args, 2, args.length);
+                new WEDispatcher(this.plugin).run(actor, w, filename, wecommand);
                 return true;
             case "save":
                 if (args.length < 2) return false;
+                if (!(actor.isPlayer())){
+                    sender.sendMessage("This command is only for Players");
+                    return true;
+                }
                 new Preset(this.plugin).save(actor, w, args[1]);
                 return true;
         }
@@ -48,7 +57,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         switch (args.length) {
             case 0:
                 return null;
@@ -58,7 +67,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 return list;
             case 2:
                 Arrays.asList(we.getWorldEdit().getWorkingDirectoryPath(plugin.saveDir).toFile().list()).stream().forEach(x -> {
-                    list.add(x.replaceFirst(".schem", ""));
+                    list.add(x.replaceFirst("."+Preset.Ext, ""));
                 });
                 return list;
             default:
@@ -79,12 +88,10 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         return Joiner.on(" ").appendTo(sb, args).toString();
     }
 
-    public World getWorldFromCommandSender(CommandSender sender) {
+    private World getWorldFromCommandSender(CommandSender sender) {
         if (sender instanceof Player) {
             return BukkitAdapter.adapt((Player) sender).getWorld();
-        } else if (sender instanceof BlockCommandSender) {
-            return BukkitAdapter.adapt(((BlockCommandSender) sender).getBlock().getWorld());
         }
-        return null;
+        return BukkitAdapter.adapt(((BlockCommandSender) sender).getBlock().getWorld());
     }
 }

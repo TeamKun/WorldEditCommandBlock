@@ -6,8 +6,8 @@ commands:
   weblock:
     description:
     usage: |
-      /<command> <run|save>
+      /<command> run <filename> <WorldEditCommand>
+      /<command> save <filename>
     permission: op
-
 depend:
   - WorldEdit
