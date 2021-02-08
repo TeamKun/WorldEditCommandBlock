@@ -10,7 +10,7 @@ public final class WECommandBlock extends JavaPlugin {
     @Override
     public void onEnable() {
         this.we = ((WorldEditPlugin) getServer().getPluginManager().getPlugin("WorldEdit"));
-        getDataFolder().mkdirs();
+        we.getWorldEdit().getWorkingDirectoryPath(saveDir).toFile().mkdirs();
         getServer().getPluginCommand("weblock").setExecutor(new CommandHandler(this));
         getServer().getPluginCommand("weblock").setTabCompleter(new CommandHandler(this));
     }
