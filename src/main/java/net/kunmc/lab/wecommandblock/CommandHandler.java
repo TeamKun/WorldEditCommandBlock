@@ -1,13 +1,13 @@
 package net.kunmc.lab.wecommandblock;
 
-import com.google.common.base.Joiner;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.extension.platform.Actor;
-import com.sk89q.worldedit.world.World;
 import net.kunmc.lab.wecommandblock.Preset.Preset;
-import org.bukkit.command.*;
-import org.bukkit.entity.Player;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +39,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
                 if (args.length < 2) return false;
 
                 boolean overwrite = args[args.length - 1].equalsIgnoreCase("-f");
-                new Preset(this.plugin).save(actor, overwrite, args[1]);
+                new Preset(this.plugin).save(actor, args[1], overwrite);
                 return true;
         }
         return false;

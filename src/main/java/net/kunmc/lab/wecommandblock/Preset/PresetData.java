@@ -4,21 +4,22 @@ import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.*;
 import com.sk89q.worldedit.util.Location;
+import com.sk89q.worldedit.world.World;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PresetData implements Serializable {
-    public String type;
+    public String typeName;
     public String worldName;
     public double[] origin = new double[3];
     public int[] pos1 = new int[3];
     public List<int[]> pos2 = new ArrayList<>();
 
 
-    public PresetData(String type, String worldName, Location origin, BlockVector3 pos1, Region region) {
-        this.type = type;
+    public PresetData(String typeName, String worldName, Location origin, BlockVector3 pos1, Region region) {
+        this.typeName = typeName;
         this.worldName = worldName;
 
         this.origin[0] = origin.getX();
@@ -29,7 +30,11 @@ public class PresetData implements Serializable {
         this.pos1[1] = pos1.getY();
         this.pos1[2] = pos1.getZ();
 
-        switch (type) {
+        setPos2(region);
+    }
+
+    private void setPos2(Region region) {
+        switch (typeName) {
             case "cuboid": {
                 BlockVector3 pos2 = ((CuboidRegion) region).getPos2();
                 int[] v = {pos2.getX(), pos2.getY(), pos2.getZ()};
@@ -64,9 +69,9 @@ public class PresetData implements Serializable {
                 CylinderRegion newRegion = ((CylinderRegion) region);
                 BlockVector2 tmp = newRegion.getRadius().toBlockPoint();
                 BlockVector3 pos2 = BlockVector3.at(tmp.getX(), newRegion.getHeight(), tmp.getZ());
-                int[] v1 = {this.pos1[0] + pos2.getX(),  newRegion.getMinimumY(), this.pos1[2] + pos2.getZ()};
+                int[] v1 = {this.pos1[0] + pos2.getX(), newRegion.getMinimumY(), this.pos1[2] + pos2.getZ()};
                 this.pos2.add(v1);
-                int[] v2 = {this.pos1[0] + pos2.getX(),  newRegion.getMaximumY(), this.pos1[2] + pos2.getZ()};
+                int[] v2 = {this.pos1[0] + pos2.getX(), newRegion.getMaximumY(), this.pos1[2] + pos2.getZ()};
                 this.pos2.add(v2);
                 break;
             }
@@ -78,5 +83,21 @@ public class PresetData implements Serializable {
                 });
                 break;
         }
+    }
+
+    public Location getOrigin(World w) {
+        return new Location(w, origin[0], origin[1], origin[2]);
+    }
+
+    public BlockVector3 getPrimaryPosition() {
+        return BlockVector3.at(pos1[0], pos1[1], pos1[2]);
+    }
+
+    public List<BlockVector3> getSecondarySelections() {
+        List<BlockVector3> list = new ArrayList<>();
+        pos2.forEach(x -> {
+            list.add(BlockVector3.at(x[0], x[1], x[2]));
+        });
+        return list;
     }
 }

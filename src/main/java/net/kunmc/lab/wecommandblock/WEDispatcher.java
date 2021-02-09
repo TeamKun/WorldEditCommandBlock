@@ -15,7 +15,6 @@ import com.sk89q.worldedit.world.World;
 import net.kunmc.lab.wecommandblock.Preset.Preset;
 import net.kunmc.lab.wecommandblock.Preset.PresetData;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,23 +28,24 @@ public class WEDispatcher {
     }
 
     public void run(Actor actor, String filename, String[] wecommand) {
-        PresetData data = new Preset(plugin).load(actor, filename);
-        String type = data.type;
+        PresetData data;
+        try {
+            data = new Preset(plugin).load(actor, filename);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        String typeName = data.typeName;
         World w = BukkitAdapter.adapt(plugin.getServer().getWorld(data.worldName));
-        Location origin = new Location(w, data.origin[0], data.origin[1], data.origin[2]);
-        BlockVector3 pos1 = BlockVector3.at(data.pos1[0], data.pos1[1], data.pos1[2]);
-        List<BlockVector3> pos2 = new ArrayList<>();
-        data.pos2.forEach(x -> {
-            pos2.add(BlockVector3.at(x[0], x[1], x[2]));
-        });
+        Location origin = data.getOrigin(w);
+        BlockVector3 pos1 = data.getPrimaryPosition();
+        List<BlockVector3> pos2 = data.getSecondarySelections();
 
         LocalSession session = we.getWorldEdit().getSessionManager().get(actor);
-        RegionSelector newSelector = selectRegionSelectorType(session.getRegionSelector(w), type);
+        RegionSelector newSelector = selectRegionSelectorType(session.getRegionSelector(w), typeName);
+        newSelector.selectPrimary(pos1, ActorSelectorLimits.forActor(actor));
+        pos2.forEach(x -> newSelector.selectSecondary(x, ActorSelectorLimits.forActor(actor)));
         session.setRegionSelector(w, newSelector);
-        session.getRegionSelector(w).selectPrimary(pos1, ActorSelectorLimits.forActor(actor));
-        pos2.forEach(x -> {
-            session.getRegionSelector(w).selectSecondary(x, ActorSelectorLimits.forActor(actor));
-        });
         session.setWorldOverride(w);
         session.setPlaceAtPos1(false);
         session.dispatchCUISelection(actor);
@@ -53,7 +53,6 @@ public class WEDispatcher {
         String arguments = rebuildArguments(wecommand[0], Arrays.copyOfRange(wecommand, 1, wecommand.length));
         FakeActor fakeActor = new FakeActor(w, actor.getSessionKey(), origin);
         we.getWorldEdit().getEventBus().post(new CommandEvent(fakeActor, arguments));
-
     }
 
     private String rebuildArguments(String commandLabel, String[] args) {
@@ -61,8 +60,8 @@ public class WEDispatcher {
         if (plSep >= 0 && plSep < commandLabel.length() + 1) {
             commandLabel = commandLabel.substring(plSep + 1);
         }
-        StringBuilder sb = new StringBuilder("");
-        if(!commandLabel.startsWith("//")){
+        StringBuilder sb = new StringBuilder();
+        if (!commandLabel.startsWith("//")) {
             sb.append("/");
         }
         sb.append(commandLabel);
