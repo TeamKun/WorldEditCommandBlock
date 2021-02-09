@@ -27,28 +27,19 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         if (args.length < 1) return false;
 
         Actor actor = BukkitAdapter.adapt(sender);
-        if (!(sender instanceof Player || sender instanceof BlockCommandSender)) {
-            actor.printError("This command is only for Players and CommandBlocks");
-            return true;
-        }
-        World w = getWorldFromCommandSender(sender);
-
         String subcmd = args[0].toLowerCase();
         switch (subcmd) {
             case "run":
                 if (args.length < 3) return false;
                 String filename = args[1];
                 String[] wecommand = Arrays.copyOfRange(args, 2, args.length);
-                new WEDispatcher(this.plugin).run(actor, w, filename, wecommand);
+                new WEDispatcher(this.plugin).run(actor, filename, wecommand);
                 return true;
             case "save":
                 if (args.length < 2) return false;
-                if (!(actor.isPlayer())) {
-                    actor.printError("This command is only for Players");
-                    return true;
-                }
+
                 boolean overwrite = args[args.length - 1].equalsIgnoreCase("-f");
-                new Preset(this.plugin).save(actor, w, overwrite, args[1]);
+                new Preset(this.plugin).save(actor, overwrite, args[1]);
                 return true;
         }
         return false;
@@ -72,25 +63,5 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             default:
                 return list;
         }
-    }
-
-    private String rebuildArguments(String commandLabel, String[] args) {
-        int plSep = commandLabel.indexOf(":");
-        if (plSep >= 0 && plSep < commandLabel.length() + 1) {
-            commandLabel = commandLabel.substring(plSep + 1);
-        }
-
-        StringBuilder sb = new StringBuilder("/").append(commandLabel);
-        if (args.length > 0) {
-            sb.append(" ");
-        }
-        return Joiner.on(" ").appendTo(sb, args).toString();
-    }
-
-    private World getWorldFromCommandSender(CommandSender sender) {
-        if (sender instanceof Player) {
-            return BukkitAdapter.adapt((Player) sender).getWorld();
-        }
-        return BukkitAdapter.adapt(((BlockCommandSender) sender).getBlock().getWorld());
     }
 }

@@ -3,10 +3,12 @@ package net.kunmc.lab.wecommandblock.Preset;
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import com.sk89q.worldedit.entity.Player;
 import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.extension.platform.Locatable;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
+import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.util.formatting.component.ErrorFormat;
 import com.sk89q.worldedit.util.io.file.FilenameException;
@@ -26,23 +28,28 @@ public class Preset {
         this.we = plugin.we;
     }
 
-    public void save(Actor actor, World w, boolean overwrite, String filename) {
+    public void save(Actor actor, boolean overwrite, String filename) {
         if (!actor.isPlayer()) {
-            actor.print(ErrorFormat.wrap("should call this command from player"));
+            actor.printError("This command is only for Players");
+            return;
         }
+
+        World w = ((Player) actor).getWorld();
         LocalSession session = we.getWorldEdit().getSessionManager().get(actor);
+        RegionSelector selector = session.getRegionSelector(w);
         Region region;
         Location origin = ((Locatable) actor).getLocation();
         BlockVector3 pos1;
         try {
-            region = session.getRegionSelector(w).getRegion();
-            pos1 = session.getRegionSelector(w).getPrimaryPosition();
+            region = selector.getRegion();
+            pos1 = selector.getPrimaryPosition();
         } catch (IncompleteRegionException e) {
             actor.printError("Make a region selection first");
             return;
         }
-        String type = session.getRegionSelector(w).getTypeName();
-        PresetData data = new PresetData(type, origin, pos1, region);
+        String type = selector.getTypeName();
+        String worldName = w.getName();
+        PresetData data = new PresetData(type, worldName, origin, pos1, region);
 
         Path dir = we.getWorldEdit().getWorkingDirectoryPath(plugin.saveDir);
         ObjectOutputStream stream;

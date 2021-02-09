@@ -2,6 +2,7 @@ package net.kunmc.lab.wecommandblock;
 
 import com.google.common.base.Joiner;
 import com.sk89q.worldedit.LocalSession;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldedit.event.platform.CommandEvent;
 import com.sk89q.worldedit.extension.platform.Actor;
@@ -27,9 +28,10 @@ public class WEDispatcher {
         this.we = plugin.we;
     }
 
-    public void run(Actor actor, World w, String filename, String[] wecommand) {
+    public void run(Actor actor, String filename, String[] wecommand) {
         PresetData data = new Preset(plugin).load(actor, filename);
         String type = data.type;
+        World w = BukkitAdapter.adapt(plugin.getServer().getWorld(data.worldName));
         Location origin = new Location(w, data.origin[0], data.origin[1], data.origin[2]);
         BlockVector3 pos1 = BlockVector3.at(data.pos1[0], data.pos1[1], data.pos1[2]);
         List<BlockVector3> pos2 = new ArrayList<>();
@@ -59,8 +61,12 @@ public class WEDispatcher {
         if (plSep >= 0 && plSep < commandLabel.length() + 1) {
             commandLabel = commandLabel.substring(plSep + 1);
         }
+        StringBuilder sb = new StringBuilder("");
+        if(!commandLabel.startsWith("//")){
+            sb.append("/");
+        }
+        sb.append(commandLabel);
 
-        StringBuilder sb = new StringBuilder("/").append(commandLabel);
         if (args.length > 0) {
             sb.append(" ");
         }
