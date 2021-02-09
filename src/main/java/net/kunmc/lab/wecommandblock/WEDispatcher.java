@@ -11,6 +11,8 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.regions.selector.*;
 import com.sk89q.worldedit.util.Location;
+import com.sk89q.worldedit.util.formatting.component.ErrorFormat;
+import com.sk89q.worldedit.util.io.file.FilenameException;
 import com.sk89q.worldedit.world.World;
 import net.kunmc.lab.wecommandblock.Preset.Preset;
 import net.kunmc.lab.wecommandblock.Preset.PresetData;
@@ -31,8 +33,11 @@ public class WEDispatcher {
         PresetData data;
         try {
             data = new Preset(plugin).load(actor, filename);
+        } catch (FilenameException e) {
+            actor.print(ErrorFormat.wrap(filename + " is invalid filename"));
+            return;
         } catch (Exception e) {
-            e.printStackTrace();
+            actor.print(ErrorFormat.wrap(e.getMessage()));
             return;
         }
         String typeName = data.typeName;

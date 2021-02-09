@@ -11,7 +11,6 @@ import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.util.Location;
 import com.sk89q.worldedit.util.formatting.component.ErrorFormat;
-import com.sk89q.worldedit.util.formatting.component.MessageBox;
 import com.sk89q.worldedit.util.io.file.FilenameException;
 import com.sk89q.worldedit.world.World;
 import net.kunmc.lab.wecommandblock.WECommandBlock;
@@ -20,7 +19,7 @@ import java.io.*;
 import java.nio.file.Path;
 
 public class Preset {
-    public static String Ext = "preset";
+    public static final String Ext = "preset";
     WECommandBlock plugin;
     WorldEditPlugin we;
 
@@ -29,7 +28,7 @@ public class Preset {
         this.we = plugin.we;
     }
 
-    public void save(Actor actor, String filename, boolean overwrite) {
+    public void save(Actor actor, String filename, boolean overwrite) throws IOException, FilenameException, IncompleteRegionException {
         if (!actor.isPlayer()) {
             actor.print(ErrorFormat.wrap("This command is only for Players"));
             return;
@@ -44,17 +43,12 @@ public class Preset {
         Location origin = ((Locatable) actor).getLocation();
         BlockVector3 pos1;
         Region region;
-        try {
-            region = selector.getRegion();
-            pos1 = selector.getPrimaryPosition();
-        } catch (IncompleteRegionException e) {
-            actor.print(ErrorFormat.wrap("Make a region selection first"));
-            return;
-        }
+        region = selector.getRegion();
+        pos1 = selector.getPrimaryPosition();
         PresetData data = new PresetData(type, worldName, origin, pos1, region);
 
         Path dir = we.getWorldEdit().getWorkingDirectoryPath(plugin.saveDir);
-        ObjectOutputStream stream;
+        ObjectOutputStream stream = null;
         try {
             File f = we.getWorldEdit().getSafeSaveFile(actor, dir.toFile(), filename, Ext);
             if (f.exists() && !overwrite) {
@@ -62,23 +56,11 @@ public class Preset {
                 return;
             }
             stream = new ObjectOutputStream(new FileOutputStream(f));
-        } catch (FilenameException | IOException e) {
-            actor.print(ErrorFormat.wrap(filename + " is invalid name"));
-            return;
-        }
-
-        try {
             stream.writeObject(data);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
+        } finally {
+            if (stream != null) stream.close();
         }
 
-        try {
-            stream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         actor.print(filename + " saved");
     }
 

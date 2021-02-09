@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PresetData implements Serializable {
+    private final double[] origin = new double[3];
+    private final int[] pos1 = new int[3];
+    private final List<int[]> pos2 = new ArrayList<>();
     public String typeName;
     public String worldName;
-    public double[] origin = new double[3];
-    public int[] pos1 = new int[3];
-    public List<int[]> pos2 = new ArrayList<>();
 
 
     public PresetData(String typeName, String worldName, Location origin, BlockVector3 pos1, Region region) {
@@ -44,10 +44,9 @@ public class PresetData implements Serializable {
             case "2Dx1D polygon": {
                 Polygonal2DRegion newRegion = ((Polygonal2DRegion) region);
                 newRegion.getPoints().forEach(pos2 -> {
-                    int[] v = {pos2.getX(), 0, pos2.getZ()};
+                    int[] v = {pos2.getX(), newRegion.getMinimumY(), pos2.getZ()};
                     this.pos2.add(v);
                 });
-                this.pos2.get(0)[1] = newRegion.getMinimumY();
                 this.pos2.get(this.pos2.size() - 1)[1] = newRegion.getMaximumY();
                 break;
             }
